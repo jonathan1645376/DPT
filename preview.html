@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DPT — Data Projecting Tool</title>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #222;
+    }
+
+    header {
+        background: #17212b;
+        color: white;
+        padding: 22px;
+    }
+
+    header h1 {
+        margin: 0 0 6px;
+    }
+
+    header p {
+        margin: 0;
+        opacity: 0.8;
+    }
+
+    .container {
+        max-width: 1500px;
+        margin: auto;
+        padding: 20px;
+    }
+
+    .box {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h2, h3 {
+        margin-top: 0;
+    }
+
+    input[type="file"],
+    textarea,
+    select,
+    button {
+        font-family: inherit;
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 150px;
+        resize: vertical;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 15px;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+        margin: 4px;
+    }
+
+    button:hover {
+        background: #1d4ed8;
+    }
+
+    button.secondary {
+        background: #64748b;
+    }
+
+    button.secondary:hover {
+        background: #475569;
+    }
+
+    .status {
+        padding: 12px;
+        background: #eef2ff;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .stat-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+    }
+
+    .stat-card .value {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 9px;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    th {
+        background: #eef2f7;
+    }
+
+    tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    details {
+        border: 1px solid #d8dee6;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    summary {
+        cursor: pointer;
+        padding: 16px 18px;
+        background: #f8fafc;
+        font-size: 18px;
+        font-weight: bold;
+        user-select: none;
+    }
+
+    summary:hover {
+        background: #eef2f7;
+    }
+
+    .details-content {
+        padding: 20px;
+    }
+
+    .section-description {
+        color: #64748b;
+        margin-bottom: 18px;
+    }
+
+    .builder-section {
+        margin-bottom: 20px;
+    }
+
+    .builder-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .toggle-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .toggle {
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #334155;
+        border-radius: 20px;
+        padding: 8px 13px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .toggle.active {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+    }
+
+    .calculation-column-settings {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .calculation-setting {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        background: #f8fafc;
+    }
+
+    .calculation-setting label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .calculation-setting select {
+        padding: 7px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+    }
+
+    .sort-controls {
+        margin-bottom: 12px;
+    }
+
+    .sort-controls button {
+        background: #64748b;
+    }
+
+    .sort-controls button.active {
+        background: #2563eb;
+    }
+
+    .group-count {
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .empty {
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        color: #64748b;
+    }
+
+    @media (max-width: 700px) {
+        .container {
+            padding: 10px;
+        }
+
+        .box {
+            padding: 14px;
+        }
+
+        header {
+            padding: 16px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>DPT — Data Projecting Tool</h1>
+    <p>Analyze, group, calculate, and explore datasets without writing SQL.</p>
+</header>
+
+<div class="container">
+
+    <!-- DATA INPUT -->
+    <div class="box">
+        <h2>Load Data</h2>
+
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls"
+               onchange="handleFile(event)">
+
+        <br>
+
+        <button onclick="loadExample()">Load Example Dataset</button>
+        <button class="secondary" onclick="clearAll()">Clear Everything</button>
+
+        <h3>Manual Data</h3>
+
+        <textarea id="manualData"
+placeholder="Example:
+Name,Age,City,Score
+Alice,14,Tel Aviv,90
+Bob,15,Ramat Gan,85
+Charlie,14,Tel Aviv,95"></textarea>
+
+        <button onclick="loadManualData()">Load Manual Data</button>
+
+        <div id="status" class="status">
+            No dataset loaded.
+        </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="overviewBox" class="box hidden">
+        <h2>Dataset Overview</h2>
+
+        <div id="overview" class="overview-grid"></div>
+    </div>
+
+    <!-- NUMERIC -->
+    <div id="numericBox" class="box hidden">
+        <h2>Numeric Columns</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Count</th>
+                        <th>Average</th>
+                        <th>Median</th>
+                        <th>Std Dev</th>
+                        <th>Q1</th>
+                        <th>Q3</th>
+                        <th>IQR</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+
+                <tbody id="numericTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CATEGORICAL -->
+    <div id="categoricalBox" class="box hidden">
+        <h2>Categorical Columns</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Count</th>
+                        <th>Top 1</th>
+                        <th>Top 2</th>
+                        <th>Top 3</th>
+                        <th>Top 4</th>
+                        <th>Top 5</th>
+                        <th>Average Count</th>
+                        <th>Total Count</th>
+                    </tr>
+                </thead>
+
+                <tbody id="categoricalTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CORRELATIONS -->
+    <div id="correlationBox" class="box hidden">
+        <details>
+            <summary>▶ Correlations</summary>
+
+            <div class="details-content">
+
+                <div class="section-description">
+                    Pearson correlations between numeric columns.
+                    Only rows containing valid values for both columns are used.
+                </div>
+
+                <div class="sort-controls">
+                    <button id="correlationHighButton"
+                            class="active"
+                            onclick="setCorrelationSort('high')">
+                        Highest → Lowest
+                    </button>
+
+                    <button id="correlationLowButton"
+                            onclick="setCorrelationSort('low')">
+                        Lowest → Highest
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Column 1</th>
+                                <th>Column 2</th>
+                                <th>Correlation</th>
+                                <th>Relationship</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="correlationTable"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </details>
+    </div>
+
+    <!-- DATA GROUPING -->
+    <div id="queryBox" class="box hidden">
+        <details>
+            <summary>▶ Data Grouping</summary>
+
+            <div class="details-content">
+
+                <div class="section-description">
+                    Select columns to display and optionally group rows by
+                    one or more columns.
+                </div>
+
+                <div class="builder-section">
+                    <div class="builder-title">
+                        SELECT columns
+                    </div>
+
+                    <div id="selectToggles" class="toggle-list"></div>
+                </div>
+
+                <div class="builder-section">
+                    <div class="builder-title">
+                        GROUP BY columns
+                    </div>
+
+                    <div id="groupToggles" class="toggle-list"></div>
+                </div>
+
+                <div class="sort-controls">
+                    <button id="groupHighButton"
+                            class="active"
+                            onclick="setGroupSort('high')">
+                        Highest Count → Lowest
+                    </button>
+
+                    <button id="groupLowButton"
+                            onclick="setGroupSort('low')">
+                        Lowest Count → Highest
+                    </button>
+                </div>
+
+                <button onclick="renderQuery()">
+                    Run Grouping
+                </button>
+
+                <div id="queryResults" style="margin-top:20px;"></div>
+
+            </div>
+        </details>
+    </div>
+
+    <!-- CALCULATIONS -->
+    <div id="calculationBox" class="box hidden">
+        <details>
+            <summary>▶ Calculations / Aggregations</summary>
+
+            <div class="details-content">
+
+                <div class="section-description">
+                    Perform calculations such as COUNT, AVG, SUM,
+                    MIN, MAX, and MEDIAN on your data.
+                </div>
+
+                <div class="builder-section">
+                    <div class="builder-title">
+                        SELECT columns
+                    </div>
+
+                    <div id="calculationSelectToggles"
+                         class="toggle-list"></div>
+                </div>
+
+                <div class="builder-section">
+                    <div class="builder-title">
+                        GROUP BY columns
+                    </div>
+
+                    <div id="calculationGroupToggles"
+                         class="toggle-list"></div>
+                </div>
+
+                <div id="calculationOperations"
+                     class="calculation-column-settings"></div>
+
+                <button onclick="runCalculations()">
+                    Run Calculation
+                </button>
+
+                <div id="calculationResults"
+                     style="margin-top:20px;"></div>
+
+            </div>
+        </details>
+    </div>
+
+</div>
+
+<script>
+
+let currentData = [];
+
+let currentNumericColumns = [];
+let currentCategoricalColumns = [];
+let currentAllColumns = [];
+
+let selectedColumns = [];
+let groupByColumns = [];
+
+let calculationSelectedColumns = [];
+let calculationGroupByColumns = [];
+let calculationOperations = {};
+
+let currentGroupSort = "high";
+let currentCorrelationSort = "high";
+
+
+/* =========================
+   BASIC UTILITIES
+========================= */
+
+function escapeHTML(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function normalizeValue(value) {
+    if (
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ""
+    ) {
+        return "(NULL)";
+    }
+
+    return String(value).trim();
+}
+
+
+function numericValue(value) {
+    if (
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ""
+    ) {
+        return null;
+    }
+
+    const n = Number(String(value).trim());
+
+    return Number.isFinite(n) ? n : null;
+}
+
+
+function formatNumber(value) {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "—";
+    }
+
+    return Number.isInteger(value)
+        ? String(value)
+        : value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+
+function showStatus(message) {
+    document.getElementById("status").textContent = message;
+}
+
+
+/* =========================
+   FILE LOADING
+========================= */
+
+function handleFile(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const extension =
+        file.name.split(".").pop().toLowerCase();
+
+    if (extension === "csv") {
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            currentData = parseCSV(e.target.result);
+            analyze();
+        };
+
+        reader.readAsText(file);
+
+    } else if (
+        extension === "xlsx" ||
+        extension === "xls"
+    ) {
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            const workbook =
+                XLSX.read(e.target.result, {type: "array"});
+
+            const sheetName =
+                workbook.SheetNames[0];
+
+            const worksheet =
+                workbook.Sheets[sheetName];
+
+            currentData =
+                XLSX.utils.sheet_to_json(
+                    worksheet,
+                    {defval: ""}
+                );
+
+            analyze();
+        };
+
+        reader.readAsArrayBuffer(file);
+
+    } else {
+
+        showStatus("Unsupported file type.");
+
+    }
+}
+
+
+function parseCSV(text) {
+
+    const lines =
+        text.trim()
+            .split(/\r?\n/)
+            .filter(line => line.trim() !== "");
+
+    if (!lines.length) return [];
+
+    const rows =
+        lines.map(line => {
+
+            const result = [];
+            let current = "";
+            let insideQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+
+                const char = line[i];
+
+                if (char === '"') {
+
+                    if (
+                        insideQuotes &&
+                        line[i + 1] === '"'
+                    ) {
+                        current += '"';
+                        i++;
+                    } else {
+                        insideQuotes = !insideQuotes;
+                    }
+
+                } else if (
+                    char === "," &&
+                    !insideQuotes
+                ) {
+
+                    result.push(current);
+                    current = "";
+
+                } else {
+
+                    current += char;
+
+                }
+            }
+
+            result.push(current);
+
+            return result;
+        });
+
+    const headers = rows[0].map(h => h.trim());
+
+    return rows.slice(1).map(row => {
+
+        const object = {};
+
+        headers.forEach((header, index) => {
+            object[header] =
+                row[index] !== undefined
+                    ? row[index].trim()
+                    : "";
+        });
+
+        return object;
+    });
+}
+
+
+function loadManualData() {
+
+    const text =
+        document.getElementById("manualData").value;
+
+    if (!text.trim()) {
+        showStatus("Please enter data first.");
+        return;
+    }
+
+    currentData = parseCSV(text);
+
+    analyze();
+}
+
+
+function loadExample() {
+
+    const example = `Name,Age,City,Score,Passed
+Alice,14,Tel Aviv,90,Yes
+Bob,15,Ramat Gan,85,Yes
+Charlie,14,Tel Aviv,95,Yes
+David,15,Ramat Gan,72,No
+Emma,14,Petah Tikva,88,Yes
+Frank,16,Tel Aviv,91,Yes
+Grace,15,Petah Tikva,76,Yes
+Henry,16,Ramat Gan,68,No
+Iris,14,Tel Aviv,97,Yes
+Jack,15,Petah Tikva,82,Yes`;
+
+    document.getElementById("manualData").value = example;
+
+    currentData = parseCSV(example);
+
+    analyze();
+}
+
+
+function clearAll() {
+
+    currentData = [];
+
+    currentNumericColumns = [];
+    currentCategoricalColumns = [];
+    currentAllColumns = [];
+
+    selectedColumns = [];
+    groupByColumns = [];
+
+    calculationSelectedColumns = [];
+    calculationGroupByColumns = [];
+    calculationOperations = {};
+
+    document.getElementById("manualData").value = "";
+    document.getElementById("fileInput").value = "";
+
+    document
+        .querySelectorAll(".box.hidden")
+        .forEach(() => {});
+
+    document.getElementById("overviewBox").classList.add("hidden");
+    document.getElementById("numericBox").classList.add("hidden");
+    document.getElementById("categoricalBox").classList.add("hidden");
+    document.getElementById("correlationBox").classList.add("hidden");
+    document.getElementById("queryBox").classList.add("hidden");
+    document.getElementById("calculationBox").classList.add("hidden");
+
+    document.getElementById("overview").innerHTML = "";
+    document.getElementById("numericTable").innerHTML = "";
+    document.getElementById("categoricalTable").innerHTML = "";
+    document.getElementById("correlationTable").innerHTML = "";
+    document.getElementById("queryResults").innerHTML = "";
+    document.getElementById("calculationResults").innerHTML = "";
+
+    showStatus("No dataset loaded.");
+}
+
+
+/* =========================
+   ANALYSIS
+========================= */
+
+function analyze() {
+
+    if (!currentData.length) {
+        showStatus("No usable rows found.");
+        return;
+    }
+
+    currentAllColumns =
+        Object.keys(currentData[0]);
+
+    detectColumnTypes();
+
+    renderOverview();
+    renderNumericColumns();
+    renderCategoricalColumns();
+
+    setupQueryBuilder();
+    setupCalculationBuilder();
+
+    renderCorrelations();
+
+    document.getElementById("overviewBox")
+        .classList.remove("hidden");
+
+    document.getElementById("numericBox")
+        .classList.remove("hidden");
+
+    document.getElementById("categoricalBox")
+        .classList.remove("hidden");
+
+    document.getElementById("correlationBox")
+        .classList.remove("hidden");
+
+    document.getElementById("queryBox")
+        .classList.remove("hidden");
+
+    document.getElementById("calculationBox")
+        .classList.remove("hidden");
+
+    showStatus(
+        `Loaded ${currentData.length} rows and ${currentAllColumns.length} columns.`
+    );
+}
+
+
+function detectColumnTypes() {
+
+    currentNumericColumns = [];
+    currentCategoricalColumns = [];
+
+    currentAllColumns.forEach(column => {
+
+        const values = currentData
+            .map(row => row[column])
+            .filter(value =>
+                value !== null &&
+                value !== undefined &&
+                String(value).trim() !== ""
+            );
+
+        if (!values.length) {
+            currentCategoricalColumns.push(column);
+            return;
+        }
+
+        const numericCount =
+            values.filter(value =>
+                numericValue(value) !== null
+            ).length;
+
+        if (numericCount === values.length) {
+            currentNumericColumns.push(column);
+        } else {
+            currentCategoricalColumns.push(column);
+        }
+    });
+}
+
+
+/* =========================
+   OVERVIEW
+========================= */
+
+function renderOverview() {
+
+    document.getElementById("overview").innerHTML = `
+
+        <div class="stat-card">
+            <div>Rows</div>
+            <div class="value">${currentData.length}</div>
+        </div>
+
+        <div class="stat-card">
+            <div>Columns</div>
+            <div class="value">${currentAllColumns.length}</div>
+        </div>
+
+        <div class="stat-card">
+            <div>Numeric Columns</div>
+            <div class="value">${currentNumericColumns.length}</div>
+        </div>
+
+        <div class="stat-card">
+            <div>Categorical Columns</div>
+            <div class="value">${currentCategoricalColumns.length}</div>
+        </div>
+    `;
+}
+
+
+/* =========================
+   NUMERIC STATISTICS
+========================= */
+
+function getNumericValues(column, rows = currentData) {
+
+    return rows
+        .map(row => numericValue(row[column]))
+        .filter(value => value !== null);
+}
+
+
+function average(values) {
+
+    if (!values.length) return 0;
+
+    return values.reduce(
+        (sum, value) => sum + value,
+        0
+    ) / values.length;
+}
+
+
+function median(values) {
+
+    if (!values.length) return 0;
+
+    const sorted = [...values]
+        .sort((a, b) => a - b);
+
+    const middle =
+        Math.floor(sorted.length / 2);
+
+    if (sorted.length % 2 === 0) {
+
+        return (
+            sorted[middle - 1] +
+            sorted[middle]
+        ) / 2;
+
+    }
+
+    return sorted[middle];
+}
+
+
+function standardDeviation(values) {
+
+    if (!values.length) return 0;
+
+    const mean = average(values);
+
+    const variance =
+        values.reduce(
+            (sum, value) =>
+                sum + Math.pow(value - mean, 2),
+            0
+        ) / values.length;
+
+    return Math.sqrt(variance);
+}
+
+
+function percentile(values, p) {
+
+    if (!values.length) return 0;
+
+    const sorted = [...values]
+        .sort((a, b) => a - b);
+
+    const index =
+        (sorted.length - 1) * p;
+
+    const lower = Math.floor(index);
+    const upper = Math.ceil(index);
+
+    if (lower === upper) {
+        return sorted[lower];
+    }
+
+    return (
+        sorted[lower] +
+        (sorted[upper] - sorted[lower]) *
+        (index - lower)
+    );
+}
+
+
+function renderNumericColumns() {
+
+    const tbody =
+        document.getElementById("numericTable");
+
+    tbody.innerHTML = "";
+
+    currentNumericColumns.forEach(column => {
+
+        const values =
+            getNumericValues(column);
+
+        const q1 =
+            percentile(values, 0.25);
+
+        const q3 =
+            percentile(values, 0.75);
+
+        const iqr =
+            q3 - q1;
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>${escapeHTML(column)}</td>
+
+            <td>${values.length}</td>
+
+            <td>${formatNumber(average(values))}</td>
+
+            <td>${formatNumber(median(values))}</td>
+
+            <td>${formatNumber(standardDeviation(values))}</td>
+
+            <td>${formatNumber(q1)}</td>
+
+            <td>${formatNumber(q3)}</td>
+
+            <td>${formatNumber(iqr)}</td>
+
+            <td>${formatNumber(
+                values.reduce((a,b) => a+b, 0)
+            )}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    if (!currentNumericColumns.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">No numeric columns detected.</td>
+            </tr>
+        `;
+    }
+}
+
+
+/* =========================
+   CATEGORICAL STATISTICS
+========================= */
+
+function renderCategoricalColumns() {
+
+    const tbody =
+        document.getElementById("categoricalTable");
+
+    tbody.innerHTML = "";
+
+    currentCategoricalColumns.forEach(column => {
+
+        const counts = {};
+
+        currentData.forEach(row => {
+
+            const value =
+                normalizeValue(row[column]);
+
+            counts[value] =
+                (counts[value] || 0) + 1;
+        });
+
+        const sorted =
+            Object.entries(counts)
+                .sort((a,b) => b[1] - a[1]);
+
+        const categoryCount =
+            sorted.length;
+
+        const totalCount =
+            currentData.length;
+
+        const averageCount =
+            categoryCount
+                ? totalCount / categoryCount
+                : 0;
+
+        const row =
+            document.createElement("tr");
+
+        let topCells = "";
+
+        for (let i = 0; i < 5; i++) {
+
+            if (sorted[i]) {
+
+                topCells += `
+                    <td>
+                        ${escapeHTML(sorted[i][0])}
+                        (${sorted[i][1]})
+                    </td>
+                `;
+
+            } else {
+
+                topCells += `<td>—</td>`;
+
+            }
+        }
+
+        row.innerHTML = `
+
+            <td>${escapeHTML(column)}</td>
+
+            <td>${categoryCount}</td>
+
+            ${topCells}
+
+            <td>${formatNumber(averageCount)}</td>
+
+            <td>${totalCount}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    if (!currentCategoricalColumns.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">
+                    No categorical columns detected.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+/* =========================
+   CORRELATIONS
+========================= */
+
+function pearsonCorrelation(x, y) {
+
+    if (x.length !== y.length || x.length < 2) {
+        return null;
+    }
+
+    const meanX = average(x);
+    const meanY = average(y);
+
+    let numerator = 0;
+    let denominatorX = 0;
+    let denominatorY = 0;
+
+    for (let i = 0; i < x.length; i++) {
+
+        const dx = x[i] - meanX;
+        const dy = y[i] - meanY;
+
+        numerator += dx * dy;
+        denominatorX += dx * dx;
+        denominatorY += dy * dy;
+    }
+
+    const denominator =
+        Math.sqrt(
+            denominatorX *
+            denominatorY
+        );
+
+    if (denominator === 0) {
+        return null;
+    }
+
+    return numerator / denominator;
+}
+
+
+function getRelationship(r) {
+
+    if (r >= 0.7) {
+        return "Strong positive";
+    }
+
+    if (r >= 0.3) {
+        return "Moderate positive";
+    }
+
+    if (r > -0.3) {
+        return "Weak / none";
+    }
+
+    if (r > -0.7) {
+        return "Moderate negative";
+    }
+
+    return "Strong negative";
+}
+
+
+function setCorrelationSort(sort) {
+
+    currentCorrelationSort = sort;
+
+    document
+        .getElementById("correlationHighButton")
+        .classList.toggle(
+            "active",
+            sort === "high"
+        );
+
+    document
+        .getElementById("correlationLowButton")
+        .classList.toggle(
+            "active",
+            sort === "low"
+        );
+
+    renderCorrelations();
+}
+
+
+function renderCorrelations() {
+
+    const tbody =
+        document.getElementById("correlationTable");
+
+    tbody.innerHTML = "";
+
+    const correlations = [];
+
+    for (
+        let i = 0;
+        i < currentNumericColumns.length;
+        i++
+    ) {
+
+        for (
+            let j = i + 1;
+            j < currentNumericColumns.length;
+            j++
+        ) {
+
+            const columnA =
+                currentNumericColumns[i];
+
+            const columnB =
+                currentNumericColumns[j];
+
+            const x = [];
+            const y = [];
+
+            currentData.forEach(row => {
+
+                const a =
+                    numericValue(row[columnA]);
+
+                const b =
+                    numericValue(row[columnB]);
+
+                if (a !== null && b !== null) {
+                    x.push(a);
+                    y.push(b);
+                }
+            });
+
+            const correlation =
+                pearsonCorrelation(x, y);
+
+            if (correlation !== null) {
+
+                correlations.push({
+                    columnA,
+                    columnB,
+                    correlation
+                });
+            }
+        }
+    }
+
+    correlations.sort((a,b) => {
+
+        const A = Math.abs(a.correlation);
+        const B = Math.abs(b.correlation);
+
+        return currentCorrelationSort === "high"
+            ? B - A
+            : A - B;
+    });
+
+    correlations.forEach(item => {
+
+        const row =
+            document.createElement("tr");
+
+        row.innerHTML = `
+
+            <td>${escapeHTML(item.columnA)}</td>
+
+            <td>${escapeHTML(item.columnB)}</td>
+
+            <td>${formatNumber(item.correlation)}</td>
+
+            <td>${getRelationship(item.correlation)}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    if (!correlations.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4">
+                    Not enough numeric columns or valid data.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+/* =========================
+   DATA GROUPING
+========================= */
+
+function createToggle(
+    container,
+    column,
+    selectedArray,
+    callback
+) {
+
+    const button =
+        document.createElement("div");
+
+    button.className =
+        "toggle";
+
+    if (selectedArray.includes(column)) {
+        button.classList.add("active");
+    }
+
+    button.textContent = column;
+
+    button.onclick = function() {
+
+        const index =
+            selectedArray.indexOf(column);
+
+        if (index === -1) {
+            selectedArray.push(column);
+            button.classList.add("active");
+        } else {
+            selectedArray.splice(index, 1);
+            button.classList.remove("active");
+        }
+
+        callback();
+    };
+
+    container.appendChild(button);
+}
+
+
+function setupQueryBuilder() {
+
+    selectedColumns = [];
+    groupByColumns = [];
+
+    const selectContainer =
+        document.getElementById("selectToggles");
+
+    const groupContainer =
+        document.getElementById("groupToggles");
+
+    selectContainer.innerHTML = "";
+    groupContainer.innerHTML = "";
+
+    currentAllColumns.forEach(column => {
+
+        createToggle(
+            selectContainer,
+            column,
+            selectedColumns,
+            () => {}
+        );
+
+        createToggle(
+            groupContainer,
+            column,
+            groupByColumns,
+            () => {}
+        );
+    });
+}
+
+
+function setGroupSort(sort) {
+
+    currentGroupSort = sort;
+
+    document
+        .getElementById("groupHighButton")
+        .classList.toggle(
+            "active",
+            sort === "high"
+        );
+
+    document
+        .getElementById("groupLowButton")
+        .classList.toggle(
+            "active",
+            sort === "low"
+        );
+
+    renderQuery();
+}
+
+
+function renderQuery() {
+
+    const results =
+        document.getElementById("queryResults");
+
+    if (!selectedColumns.length &&
+        !groupByColumns.length) {
+
+        results.innerHTML = `
+            <div class="empty">
+                Select at least one column.
+            </div>
+        `;
+
+        return;
+    }
+
+    if (!groupByColumns.length) {
+
+        renderSelectedRows();
+
+        return;
+    }
+
+    renderQueryResults();
+}
+
+
+function renderQueryResults() {
+
+    const results =
+        document.getElementById("queryResults");
+
+    const groups = new Map();
+
+    currentData.forEach(row => {
+
+        const key =
+            groupByColumns
+                .map(column =>
+                    normalizeValue(row[column])
+                )
+                .join("|||");
+
+        if (!groups.has(key)) {
+            groups.set(key, []);
+        }
+
+        groups.get(key).push(row);
+    });
+
+    let groupEntries =
+        [...groups.entries()]
+            .map(([key, rows]) => ({
+                key,
+                rows
+            }));
+
+    groupEntries.sort((a,b) => {
+
+        return currentGroupSort === "high"
+            ? b.rows.length - a.rows.length
+            : a.rows.length - b.rows.length;
+    });
+
+    let headers = [
+        ...groupByColumns
+    ];
+
+    selectedColumns.forEach(column => {
+
+        if (!headers.includes(column)) {
+            headers.push(column);
+        }
+    });
+
+    headers = [
+        ...headers,
+        "Count",
+        "% of Rows"
+    ];
+
+    let html = `
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+    `;
+
+    headers.forEach(header => {
+
+        html += `
+            <th>${escapeHTML(header)}</th>
+        `;
+    });
+
+    html += `
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    groupEntries.forEach(group => {
+
+        const rows = group.rows;
+
+        html += "<tr>";
+
+        headers.forEach(column => {
+
+            if (column === "Count") {
+
+                html += `
+                    <td class="group-count">
+                        ${rows.length}
+                    </td>
+                `;
+
+            } else if (column === "% of Rows") {
+
+                const percentage =
+                    (rows.length /
+                        currentData.length) *
+                    100;
+
+                html += `
+                    <td>
+                        ${formatNumber(percentage)}%
+                    </td>
+                `;
+
+            } else if (
+                groupByColumns.includes(column)
+            ) {
+
+                html += `
+                    <td>
+                        ${escapeHTML(
+                            normalizeValue(rows[0][column])
+                        )}
+                    </td>
+                `;
+
+            } else {
+
+                const values = [
+                    ...new Set(
+                        rows.map(row =>
+                            normalizeValue(row[column])
+                        )
+                    )
+                ];
+
+                html += `
+                    <td>
+                        ${escapeHTML(
+                            values.join(", ")
+                        )}
+                    </td>
+                `;
+            }
+        });
+
+        html += "</tr>";
+    });
+
+    html += `
+            </tbody>
+        </table>
+        </div>
+    `;
+
+    results.innerHTML = html;
+}
+
+
+function renderSelectedRows() {
+
+    const results =
+        document.getElementById("queryResults");
+
+    if (!selectedColumns.length) {
+
+        results.innerHTML = `
+            <div class="empty">
+                Select at least one column.
+            </div>
+        `;
+
+        return;
+    }
+
+    let html = `
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+    `;
+
+    selectedColumns.forEach(column => {
+
+        html += `
+            <th>${escapeHTML(column)}</th>
+        `;
+    });
+
+    html += `
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    currentData.forEach(row => {
+
+        html += "<tr>";
+
+        selectedColumns.forEach(column => {
+
+            html += `
+                <td>
+                    ${escapeHTML(
+                        normalizeValue(row[column])
+                    )}
+                </td>
+            `;
+        });
+
+        html += "</tr>";
+    });
+
+    html += `
+            </tbody>
+        </table>
+        </div>
+    `;
+
+    results.innerHTML = html;
+}
+
+
+/* =========================
+   CALCULATIONS
+========================= */
+
+function setupCalculationBuilder() {
+
+    calculationSelectedColumns = [];
+    calculationGroupByColumns = [];
+    calculationOperations = {};
+
+    const selectContainer =
+        document.getElementById(
+            "calculationSelectToggles"
+        );
+
+    const groupContainer =
+        document.getElementById(
+            "calculationGroupToggles"
+        );
+
+    selectContainer.innerHTML = "";
+    groupContainer.innerHTML = "";
+
+    currentAllColumns.forEach(column => {
+
+        createToggle(
+            selectContainer,
+            column,
+            calculationSelectedColumns,
+            renderCalculationOperations
+        );
+
+        createToggle(
+            groupContainer,
+            column,
+            calculationGroupByColumns,
+            renderCalculationOperations
+        );
+    });
+
+    renderCalculationOperations();
+}
+
+
+function renderCalculationOperations() {
+
+    const container =
+        document.getElementById(
+            "calculationOperations"
+        );
+
+    container.innerHTML = "";
+
+    calculationSelectedColumns.forEach(column => {
+
+        if (!calculationOperations[column]) {
+
+            if (currentNumericColumns.includes(column)) {
+
+                calculationOperations[column] =
+                    "average";
+
+            } else {
+
+                calculationOperations[column] =
+                    "values";
+            }
+        }
+
+        const setting =
+            document.createElement("div");
+
+        setting.className =
+            "calculation-setting";
+
+        const label =
+            document.createElement("label");
+
+        label.textContent = column;
+
+        const select =
+            document.createElement("select");
+
+        if (currentNumericColumns.includes(column)) {
+
+            select.innerHTML = `
+                <option value="values">Values</option>
+                <option value="count">Count</option>
+                <option value="average">Average</option>
+                <option value="sum">Sum</option>
+                <option value="min">Minimum</option>
+                <option value="max">Maximum</option>
+                <option value="median">Median</option>
+            `;
+
+        } else {
+
+            select.innerHTML = `
+                <option value="values">Values</option>
+                <option value="count">Count</option>
+            `;
+        }
+
+        select.value =
+            calculationOperations[column];
+
+        select.onchange = function() {
+
+            calculationOperations[column] =
+                select.value;
+        };
+
+        setting.appendChild(label);
+        setting.appendChild(select);
+
+        container.appendChild(setting);
+    });
+}
+
+
+function calculateOperation(
+    rows,
+    column,
+    operation
+) {
+
+    if (operation === "values") {
+
+        const values = [
+            ...new Set(
+                rows.map(row =>
+                    normalizeValue(row[column])
+                )
+            )
+        ];
+
+        return values.join(", ");
+    }
+
+
+    if (operation === "count") {
+
+        if (currentNumericColumns.includes(column)) {
+
+            const values = rows
+                .map(row =>
+                    numericValue(row[column])
+                )
+                .filter(value =>
+                    value !== null
+                );
+
+            return values.length;
+        }
+
+        return rows.length;
+    }
+
+
+    const values = rows
+        .map(row =>
+            numericValue(row[column])
+        )
+        .filter(value =>
+            value !== null
+        );
+
+    if (!values.length) {
+        return "—";
+    }
+
+
+    if (operation === "average") {
+        return formatNumber(
+            average(values)
+        );
+    }
+
+
+    if (operation === "sum") {
+
+        return formatNumber(
+            values.reduce(
+                (a,b) => a + b,
+                0
+            )
+        );
+    }
+
+
+    if (operation === "min") {
+
+        return formatNumber(
+            Math.min(...values)
+        );
+    }
+
+
+    if (operation === "max") {
+
+        return formatNumber(
+            Math.max(...values)
+        );
+    }
+
+
+    if (operation === "median") {
+
+        return formatNumber(
+            median(values)
+        );
+    }
+
+    return "—";
+}
+
+
+function runCalculations() {
+
+    const results =
+        document.getElementById(
+            "calculationResults"
+        );
+
+    if (!calculationSelectedColumns.length) {
+
+        results.innerHTML = `
+            <div class="empty">
+                Select at least one column.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    let groups = [];
+
+
+    if (!calculationGroupByColumns.length) {
+
+        groups = [
+            {
+                rows: currentData,
+                groupValues: {}
+            }
+        ];
+
+    } else {
+
+        const groupMap = new Map();
+
+        currentData.forEach(row => {
+
+            const key =
+                calculationGroupByColumns
+                    .map(column =>
+                        normalizeValue(row[column])
+                    )
+                    .join("|||");
+
+            if (!groupMap.has(key)) {
+
+                groupMap.set(key, {
+                    rows: [],
+                    groupValues: {}
+                });
+
+                calculationGroupByColumns
+                    .forEach(column => {
+
+                        groupMap.get(key)
+                            .groupValues[column] =
+                            normalizeValue(
+                                row[column]
+                            );
+                    });
+            }
+
+            groupMap.get(key).rows.push(row);
+        });
+
+        groups = [...groupMap.values()];
+    }
+
+
+    let headers = [
+        ...calculationGroupByColumns
+    ];
+
+    calculationSelectedColumns.forEach(column => {
+
+        headers.push(
+            `${column} (${
+                getOperationName(
+                    calculationOperations[column]
+                )
+            })`
+        );
+    });
+
+
+    let html = `
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+    `;
+
+    headers.forEach(header => {
+
+        html += `
+            <th>${escapeHTML(header)}</th>
+        `;
+    });
+
+    html += `
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+
+    groups.forEach(group => {
+
+        html += "<tr>";
+
+
+        calculationGroupByColumns
+            .forEach(column => {
+
+                html += `
+                    <td>
+                        ${escapeHTML(
+                            group.groupValues[column]
+                        )}
+                    </td>
+                `;
+            });
+
+
+        calculationSelectedColumns
+            .forEach(column => {
+
+                const result =
+                    calculateOperation(
+                        group.rows,
+                        column,
+                        calculationOperations[column]
+                    );
+
+                html += `
+                    <td>
+                        ${escapeHTML(result)}
+                    </td>
+                `;
+            });
+
+
+        html += "</tr>";
+    });
+
+
+    html += `
+            </tbody>
+        </table>
+        </div>
+    `;
+
+
+    results.innerHTML = html;
+}
+
+
+function getOperationName(operation) {
+
+    const names = {
+
+        values: "Values",
+        count: "Count",
+        average: "Average",
+        sum: "Sum",
+        min: "Minimum",
+        max: "Maximum",
+        median: "Median"
+    };
+
+    return names[operation] || operation;
+}
+
+</script>
+
+</body>
+</html>
