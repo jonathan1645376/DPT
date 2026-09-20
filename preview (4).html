@@ -1,0 +1,3090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DPT — Data Projecting Tool</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    color: #14213d;
+}
+
+header {
+    background: #0b1f3a;
+    color: white;
+    padding: 20px 24px;
+    border-bottom: 3px solid #163d70;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+header p {
+    margin: 6px 0 0;
+    color: #d9e5f5;
+}
+
+main {
+    padding: 20px;
+    max-width: 1500px;
+    margin: auto;
+}
+
+.section,
+.always-section {
+    background: white;
+    border: 1px solid #cbd6e5;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgba(11, 31, 58, 0.06);
+}
+
+.always-section {
+    padding: 18px;
+}
+
+.always-section h2 {
+    margin-top: 0;
+    color: #0b1f3a;
+}
+
+.section {
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 15px 18px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    color: #0b1f3a;
+}
+
+.section-header:hover {
+    background: #f0f5fb;
+}
+
+.section-content {
+    display: none;
+    padding: 18px;
+    border-top: 1px solid #d8e1ec;
+}
+
+.section.open .section-content {
+    display: block;
+}
+
+.arrow {
+    color: #174a82;
+    font-size: 14px;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.table-manager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+button,
+select,
+input {
+    font: inherit;
+}
+
+button {
+    border: 1px solid #b9c7d8;
+    background: white;
+    color: #14213d;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #edf3fa;
+    border-color: #174a82;
+}
+
+button.primary {
+    background: #0b1f3a;
+    color: white;
+    border-color: #0b1f3a;
+}
+
+button.primary:hover {
+    background: #174a82;
+}
+
+button.danger {
+    color: #a51c30;
+    border-color: #d7a7af;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+input,
+select {
+    padding: 8px;
+    border: 1px solid #b9c7d8;
+    border-radius: 7px;
+    background: white;
+    color: #14213d;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #174a82;
+    box-shadow: 0 0 0 2px rgba(23, 74, 130, 0.12);
+}
+
+.status {
+    margin-top: 10px;
+    color: #53657d;
+    font-size: 14px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.stat-card {
+    border: 1px solid #ccd8e6;
+    border-radius: 8px;
+    padding: 12px;
+    background: #f7faff;
+}
+
+.stat-card strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #0b1f3a;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #cbd6e5;
+    border-radius: 8px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 600px;
+}
+
+th,
+td {
+    border-bottom: 1px solid #e1e7ef;
+    padding: 8px 10px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: #0b1f3a;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+tr:nth-child(even) td {
+    background: #f8fafd;
+}
+
+tr:hover td {
+    background: #eef4fb;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.result-table {
+    margin-top: 14px;
+}
+
+.message {
+    padding: 10px;
+    background: #eef4fb;
+    border: 1px solid #d3dfed;
+    border-radius: 7px;
+    color: #40536d;
+}
+
+.correlation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.correlation-row {
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: 10px;
+    padding: 9px;
+    border: 1px solid #e0e7ef;
+    border-radius: 7px;
+    align-items: center;
+}
+
+.correlation-row:first-child {
+    background: #0b1f3a;
+    color: white;
+    border-color: #0b1f3a;
+}
+
+.correlation-value {
+    font-weight: bold;
+    color: #123e70;
+}
+
+.correlation-row:first-child .correlation-value {
+    color: white;
+}
+
+.subsection {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #d8e1ec;
+}
+
+.subsection h3 {
+    margin-top: 0;
+    color: #0b1f3a;
+}
+
+.chart-container {
+    width: 100%;
+    height: 650px;
+    position: relative;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.chart-value-select {
+    min-width: 180px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.small {
+    font-size: 13px;
+    color: #53657d;
+}
+
+@media (max-width: 700px) {
+    main {
+        padding: 10px;
+    }
+
+    .correlation-row {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        height: 450px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>DPT — Data Projecting Tool</h1>
+    <p>Fast data analysis without unnecessary work.</p>
+</header>
+
+<main>
+
+<div class="always-section">
+
+    <h2>Table Manager</h2>
+
+    <div class="table-manager">
+
+        <select id="tableSelector">
+            <option value="">No table selected</option>
+        </select>
+
+        <button id="newTable">
+            New Table
+        </button>
+
+        <button id="renameTable">
+            Rename
+        </button>
+
+        <button id="deleteTable" class="danger">
+            Delete
+        </button>
+
+        <input
+            type="file"
+            id="fileInput"
+            accept=".csv,.xlsx,.xls"
+        >
+
+        <button id="exportTable">
+            Export CSV
+        </button>
+
+    </div>
+
+    <div id="tableManagerStatus" class="status"></div>
+
+</div>
+
+
+<div class="always-section">
+
+    <h2>Overview</h2>
+
+    <div id="overview"></div>
+
+</div>
+
+
+<div class="always-section">
+
+    <h2>Numeric Statistics</h2>
+
+    <div id="numericStats"></div>
+
+</div>
+
+
+<div class="always-section">
+
+    <h2>Categorical Statistics</h2>
+
+    <div class="controls">
+
+        <select id="categoricalColumn"></select>
+
+        <button
+            class="primary"
+            id="calculateCategorical">
+
+            Calculate Frequencies
+
+        </button>
+
+    </div>
+
+    <div id="categoricalResult"></div>
+
+</div>
+
+
+<div class="section" id="correlationsSection">
+
+    <div class="section-header">
+
+        <span>Correlations</span>
+
+        <span class="arrow">▼</span>
+
+    </div>
+
+    <div class="section-content">
+
+        <div class="controls">
+
+            <button id="sortWeakStrong">
+                W → S
+            </button>
+
+            <button id="sortStrongWeak">
+                S → W
+            </button>
+
+        </div>
+
+        <div id="correlationContent"></div>
+
+    </div>
+
+</div>
+
+
+<div class="section" id="groupingSection">
+
+    <div class="section-header">
+
+        <span>Data Grouping</span>
+
+        <span class="arrow">▼</span>
+
+    </div>
+
+    <div class="section-content">
+
+        <div id="groupingControls"></div>
+
+        <div id="groupingResult"></div>
+
+    </div>
+
+</div>
+
+
+<div class="section" id="calculationsSection">
+
+    <div class="section-header">
+
+        <span>Calculations / Aggregations</span>
+
+        <span class="arrow">▼</span>
+
+    </div>
+
+    <div class="section-content">
+
+        <div id="calculationControls"></div>
+
+        <div id="calculationResult"></div>
+
+    </div>
+
+</div>
+
+
+<div class="section" id="chartsSection">
+
+    <div class="section-header">
+
+        <span>Charts</span>
+
+        <span class="arrow">▼</span>
+
+    </div>
+
+    <div class="section-content">
+
+        <div id="chartControls"></div>
+
+        <div id="chartArea"></div>
+
+    </div>
+
+</div>
+
+
+<div class="section" id="currentDataSection">
+
+    <div class="section-header">
+
+        <span>Current Data</span>
+
+        <span class="arrow">▼</span>
+
+    </div>
+
+    <div class="section-content">
+
+        <div id="currentData"></div>
+
+    </div>
+
+</div>
+
+</main>
+
+
+<script>
+
+const state = {
+
+    tables: [],
+
+    activeTableId: null,
+
+    schemaCache: new Map(),
+
+    correlationCache: new Map(),
+
+    correlationResults: [],
+
+    currentDataPage: 0,
+
+    currentDataPageSize: 100,
+
+    chart: null
+
+};
+
+
+function activeTable() {
+
+    return state.tables.find(
+        t => t.id === state.activeTableId
+    ) || null;
+}
+
+
+function makeId() {
+
+    return (
+        "table_" +
+        Date.now() +
+        "_" +
+        Math.random()
+            .toString(36)
+            .slice(2)
+    );
+}
+
+
+function escapeHtml(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function isNull(value) {
+
+    return (
+        value === null ||
+        value === undefined ||
+        value === ""
+    );
+}
+
+
+function isNumericValue(value) {
+
+    if (isNull(value)) {
+        return false;
+    }
+
+    if (typeof value === "number") {
+        return Number.isFinite(value);
+    }
+
+    if (
+        typeof value === "string" &&
+        value.trim() !== ""
+    ) {
+        return Number.isFinite(Number(value));
+    }
+
+    return false;
+}
+
+
+function numericValue(value) {
+    return Number(value);
+}
+
+
+function formatNumber(value) {
+
+    if (!Number.isFinite(value)) {
+        return "";
+    }
+
+    return Number(
+        value.toFixed(6)
+    ).toLocaleString();
+}
+
+
+function getSchema(table) {
+
+    if (state.schemaCache.has(table.id)) {
+        return state.schemaCache.get(table.id);
+    }
+
+    const columns = [];
+
+    if (!table.data.length) {
+
+        state.schemaCache.set(
+            table.id,
+            columns
+        );
+
+        return columns;
+    }
+
+    const columnNames =
+        Object.keys(table.data[0]);
+
+    for (const column of columnNames) {
+
+        let numeric = true;
+
+        for (const row of table.data) {
+
+            if (
+                !isNull(row[column]) &&
+                !isNumericValue(row[column])
+            ) {
+
+                numeric = false;
+                break;
+            }
+        }
+
+        columns.push({
+            name: column,
+            type: numeric
+                ? "numeric"
+                : "categorical"
+        });
+    }
+
+    state.schemaCache.set(
+        table.id,
+        columns
+    );
+
+    return columns;
+}
+
+
+function numericColumns(table) {
+
+    return getSchema(table)
+        .filter(c => c.type === "numeric")
+        .map(c => c.name);
+}
+
+
+function categoricalColumns(table) {
+
+    return getSchema(table)
+        .filter(c => c.type === "categorical")
+        .map(c => c.name);
+}
+
+
+function refreshTableSelector() {
+
+    const selector =
+        document.getElementById(
+            "tableSelector"
+        );
+
+    selector.innerHTML =
+        '<option value="">No table selected</option>';
+
+    for (const table of state.tables) {
+
+        const option =
+            document.createElement("option");
+
+        option.value = table.id;
+
+        option.textContent =
+            `${table.name} (${table.data.length.toLocaleString()} rows)`;
+
+        option.selected =
+            table.id === state.activeTableId;
+
+        selector.appendChild(option);
+    }
+
+    const status =
+        document.getElementById(
+            "tableManagerStatus"
+        );
+
+    const table = activeTable();
+
+    status.textContent =
+        table
+            ? `Active table: ${table.name}`
+            : "No table selected.";
+}
+
+
+function createTable(
+    name,
+    data,
+    autoSelect = false
+) {
+
+    const table = {
+        id: makeId(),
+        name,
+        data
+    };
+
+    state.tables.push(table);
+
+    if (autoSelect) {
+
+        state.activeTableId =
+            table.id;
+
+        state.currentDataPage = 0;
+
+        state.correlationResults = [];
+
+        clearLazyResults();
+    }
+
+    refreshTableSelector();
+
+    updateOverview();
+
+    updateNumericStats();
+
+    updateCategoricalSelector();
+
+    return table;
+}
+
+
+function selectTable(id) {
+
+    state.activeTableId =
+        id || null;
+
+    state.currentDataPage = 0;
+
+    state.correlationResults = [];
+
+    refreshTableSelector();
+
+    updateOverview();
+
+    updateNumericStats();
+
+    updateCategoricalSelector();
+
+    clearLazyResults();
+}
+
+
+function clearLazyResults() {
+
+    document.getElementById(
+        "categoricalResult"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "correlationContent"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "groupingControls"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "groupingResult"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "calculationControls"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "calculationResult"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "chartControls"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "chartArea"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "currentData"
+    ).innerHTML = "";
+
+    if (state.chart) {
+
+        state.chart.destroy();
+
+        state.chart = null;
+    }
+}
+
+
+document
+.getElementById("tableSelector")
+.addEventListener(
+    "change",
+    e => selectTable(e.target.value)
+);
+
+
+document
+.getElementById("newTable")
+.addEventListener(
+    "click",
+    () => {
+
+        const name =
+            prompt("Table name:");
+
+        if (!name) return;
+
+        createTable(
+            name,
+            [],
+            false
+        );
+    }
+);
+
+
+document
+.getElementById("renameTable")
+.addEventListener(
+    "click",
+    () => {
+
+        const table = activeTable();
+
+        if (!table) {
+
+            alert("Select a table first.");
+
+            return;
+        }
+
+        const name =
+            prompt(
+                "New table name:",
+                table.name
+            );
+
+        if (!name) return;
+
+        table.name = name;
+
+        refreshTableSelector();
+    }
+);
+
+
+document
+.getElementById("deleteTable")
+.addEventListener(
+    "click",
+    () => {
+
+        const table = activeTable();
+
+        if (!table) {
+
+            alert("Select a table first.");
+
+            return;
+        }
+
+        if (
+            !confirm(
+                `Delete "${table.name}"?`
+            )
+        ) {
+            return;
+        }
+
+        state.tables =
+            state.tables.filter(
+                t => t.id !== table.id
+            );
+
+        state.schemaCache.delete(
+            table.id
+        );
+
+        state.correlationCache.delete(
+            table.id
+        );
+
+        state.activeTableId = null;
+
+        refreshTableSelector();
+
+        updateOverview();
+
+        updateNumericStats();
+
+        updateCategoricalSelector();
+
+        clearLazyResults();
+    }
+);
+
+
+function updateOverview() {
+
+    const output =
+        document.getElementById(
+            "overview"
+        );
+
+    const table = activeTable();
+
+    if (!table) {
+
+        output.innerHTML =
+            '<div class="message">Select a table to view its overview.</div>';
+
+        return;
+    }
+
+    const schema = getSchema(table);
+
+    const numeric =
+        schema.filter(
+            c => c.type === "numeric"
+        ).length;
+
+    const categorical =
+        schema.length - numeric;
+
+    output.innerHTML = `
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <strong>Rows</strong>
+                ${table.data.length.toLocaleString()}
+            </div>
+
+            <div class="stat-card">
+                <strong>Columns</strong>
+                ${schema.length}
+            </div>
+
+            <div class="stat-card">
+                <strong>Numeric Columns</strong>
+                ${numeric}
+            </div>
+
+            <div class="stat-card">
+                <strong>Categorical Columns</strong>
+                ${categorical}
+            </div>
+
+        </div>
+    `;
+}
+
+
+function percentile(sorted, p) {
+
+    if (!sorted.length) {
+        return null;
+    }
+
+    const index =
+        (sorted.length - 1) * p;
+
+    const lower =
+        Math.floor(index);
+
+    const upper =
+        Math.ceil(index);
+
+    if (lower === upper) {
+        return sorted[lower];
+    }
+
+    return (
+        sorted[lower] +
+        (
+            sorted[upper] -
+            sorted[lower]
+        ) *
+        (index - lower)
+    );
+}
+
+
+function calculateNumericStats(values) {
+
+    const nums =
+        values
+        .filter(isNumericValue)
+        .map(numericValue)
+        .sort((a, b) => a - b);
+
+    const count = nums.length;
+
+    if (!count) {
+        return null;
+    }
+
+    const sum =
+        nums.reduce(
+            (a, b) => a + b,
+            0
+        );
+
+    const mean =
+        sum / count;
+
+    let varianceSum = 0;
+
+    for (const n of nums) {
+
+        varianceSum +=
+            Math.pow(
+                n - mean,
+                2
+            );
+    }
+
+    const std =
+        count > 1
+            ? Math.sqrt(
+                varianceSum /
+                (count - 1)
+            )
+            : 0;
+
+    const median =
+        percentile(nums, 0.5);
+
+    const q1 =
+        percentile(nums, 0.25);
+
+    const q3 =
+        percentile(nums, 0.75);
+
+    return {
+        count,
+        mean,
+        median,
+        std,
+        q1,
+        q3,
+        iqr: q3 - q1,
+        min: nums[0],
+        max: nums[nums.length - 1],
+        sum
+    };
+}
+
+
+function updateNumericStats() {
+
+    const output =
+        document.getElementById(
+            "numericStats"
+        );
+
+    const table = activeTable();
+
+    if (!table) {
+
+        output.innerHTML =
+            '<div class="message">Select a table to calculate numeric statistics.</div>';
+
+        return;
+    }
+
+    const cols =
+        numericColumns(table);
+
+    if (!cols.length) {
+
+        output.innerHTML =
+            '<div class="message">No numeric columns found.</div>';
+
+        return;
+    }
+
+    let html = `
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Column</th>
+                        <th>Count</th>
+                        <th>Mean</th>
+                        <th>Median</th>
+                        <th>Std Dev</th>
+                        <th>Q1</th>
+                        <th>Q3</th>
+                        <th>IQR</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Sum</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+    `;
+
+    for (const col of cols) {
+
+        const stats =
+            calculateNumericStats(
+                table.data.map(
+                    row => row[col]
+                )
+            );
+
+        if (!stats) continue;
+
+        html += `
+
+            <tr>
+
+                <td>${escapeHtml(col)}</td>
+
+                <td>${formatNumber(stats.count)}</td>
+
+                <td>${formatNumber(stats.mean)}</td>
+
+                <td>${formatNumber(stats.median)}</td>
+
+                <td>${formatNumber(stats.std)}</td>
+
+                <td>${formatNumber(stats.q1)}</td>
+
+                <td>${formatNumber(stats.q3)}</td>
+
+                <td>${formatNumber(stats.iqr)}</td>
+
+                <td>${formatNumber(stats.min)}</td>
+
+                <td>${formatNumber(stats.max)}</td>
+
+                <td>${formatNumber(stats.sum)}</td>
+
+            </tr>
+        `;
+    }
+
+    html += `
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
+
+    output.innerHTML = html;
+}
+
+
+function updateCategoricalSelector() {
+
+    const selector =
+        document.getElementById(
+            "categoricalColumn"
+        );
+
+    selector.innerHTML = "";
+
+    const table = activeTable();
+
+    if (!table) return;
+
+    const cols =
+        categoricalColumns(table);
+
+    if (!cols.length) {
+
+        selector.innerHTML =
+            "<option>No categorical columns</option>";
+
+        return;
+    }
+
+    for (const col of cols) {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = col;
+        option.textContent = col;
+
+        selector.appendChild(option);
+    }
+}
+
+
+document
+.getElementById(
+    "calculateCategorical"
+)
+.addEventListener(
+    "click",
+    () => {
+
+        const table = activeTable();
+
+        if (!table) {
+
+            alert("Select a table first.");
+
+            return;
+        }
+
+        const col =
+            document.getElementById(
+                "categoricalColumn"
+            ).value;
+
+        if (!col) return;
+
+        const counts = new Map();
+
+        for (const row of table.data) {
+
+            let value = row[col];
+
+            if (isNull(value)) {
+                value = "(NULL / Blank)";
+            }
+
+            value = String(value);
+
+            counts.set(
+                value,
+                (counts.get(value) || 0) + 1
+            );
+        }
+
+        const rows =
+            [...counts.entries()]
+            .sort(
+                (a, b) => b[1] - a[1]
+            );
+
+        const limitedRows =
+            rows.slice(0, 100);
+
+        let html = `
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Value</th>
+
+                            <th>Count</th>
+
+                            <th>Percentage</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+        `;
+
+        for (
+            const [value, count]
+            of limitedRows
+        ) {
+
+            const percentage =
+                table.data.length
+                    ? (
+                        count /
+                        table.data.length *
+                        100
+                    )
+                    : 0;
+
+            html += `
+
+                <tr>
+
+                    <td>
+                        ${escapeHtml(value)}
+                    </td>
+
+                    <td>
+                        ${count.toLocaleString()}
+                    </td>
+
+                    <td>
+                        ${percentage.toFixed(2)}%
+                    </td>
+
+                </tr>
+            `;
+        }
+
+        html += `
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+
+        if (rows.length > 100) {
+
+            html += `
+
+                <div class="small">
+
+                    Showing the first 100 of
+                    ${rows.length.toLocaleString()}
+                    categorical values.
+
+                </div>
+            `;
+        }
+
+        document.getElementById(
+            "categoricalResult"
+        ).innerHTML = html;
+    }
+);
+
+
+document
+.querySelectorAll(".section-header")
+.forEach(
+    header => {
+
+        header.addEventListener(
+            "click",
+            () => {
+
+                const section =
+                    header.parentElement;
+
+                const opening =
+                    !section.classList.contains(
+                        "open"
+                    );
+
+                section.classList.toggle(
+                    "open"
+                );
+
+                if (!opening) return;
+
+                if (
+                    section.id ===
+                    "correlationsSection"
+                ) {
+                    loadCorrelations();
+                }
+
+                if (
+                    section.id ===
+                    "groupingSection"
+                ) {
+                    loadGrouping();
+                }
+
+                if (
+                    section.id ===
+                    "calculationsSection"
+                ) {
+                    loadCalculations();
+                }
+
+                if (
+                    section.id ===
+                    "chartsSection"
+                ) {
+                    loadCharts();
+                }
+
+                if (
+                    section.id ===
+                    "currentDataSection"
+                ) {
+                    renderCurrentData();
+                }
+            }
+        );
+    }
+);
+
+
+function pearsonCorrelation(x, y) {
+
+    let count = 0;
+
+    let sumX = 0;
+    let sumY = 0;
+
+    let sumXX = 0;
+    let sumYY = 0;
+
+    let sumXY = 0;
+
+    for (let i = 0; i < x.length; i++) {
+
+        const a = x[i];
+        const b = y[i];
+
+        if (
+            !Number.isFinite(a) ||
+            !Number.isFinite(b)
+        ) {
+            continue;
+        }
+
+        count++;
+
+        sumX += a;
+        sumY += b;
+
+        sumXX += a * a;
+        sumYY += b * b;
+
+        sumXY += a * b;
+    }
+
+    if (count < 2) {
+        return null;
+    }
+
+    const numerator =
+        count * sumXY -
+        sumX * sumY;
+
+    const denominator =
+        Math.sqrt(
+            (
+                count * sumXX -
+                sumX * sumX
+            ) *
+            (
+                count * sumYY -
+                sumY * sumY
+            )
+        );
+
+    if (denominator === 0) {
+        return null;
+    }
+
+    return numerator / denominator;
+}
+
+
+function calculateCorrelations(table) {
+
+    const columns =
+        numericColumns(table);
+
+    const results = [];
+
+    const arrays = {};
+
+    for (const col of columns) {
+
+        arrays[col] =
+            table.data.map(
+                row =>
+                    isNumericValue(row[col])
+                        ? numericValue(row[col])
+                        : NaN
+            );
+    }
+
+    for (
+        let i = 0;
+        i < columns.length;
+        i++
+    ) {
+
+        for (
+            let j = i + 1;
+            j < columns.length;
+            j++
+        ) {
+
+            const a = columns[i];
+            const b = columns[j];
+
+            const correlation =
+                pearsonCorrelation(
+                    arrays[a],
+                    arrays[b]
+                );
+
+            if (correlation === null) {
+                continue;
+            }
+
+            results.push({
+
+                a,
+                b,
+                correlation,
+
+                absolute:
+                    Math.abs(correlation)
+
+            });
+        }
+    }
+
+    return results;
+}
+
+
+function loadCorrelations() {
+
+    const output =
+        document.getElementById(
+            "correlationContent"
+        );
+
+    const table = activeTable();
+
+    if (!table) {
+
+        output.innerHTML =
+            '<div class="message">Select a table first.</div>';
+
+        return;
+    }
+
+    if (
+        state.correlationCache.has(
+            table.id
+        )
+    ) {
+
+        state.correlationResults =
+            state.correlationCache.get(
+                table.id
+            );
+
+    } else {
+
+        state.correlationResults =
+            calculateCorrelations(table);
+
+        state.correlationCache.set(
+            table.id,
+            state.correlationResults
+        );
+    }
+
+    renderCorrelations();
+}
+
+
+function renderCorrelations() {
+
+    const output =
+        document.getElementById(
+            "correlationContent"
+        );
+
+    const results =
+        state.correlationResults;
+
+    if (!results.length) {
+
+        output.innerHTML =
+            '<div class="message">Not enough numeric columns to calculate correlations.</div>';
+
+        return;
+    }
+
+    let html = `
+
+        <div class="correlation-list">
+
+            <div class="correlation-row">
+
+                <strong>
+                    Column Pair
+                </strong>
+
+                <strong>
+                    Correlation
+                </strong>
+
+            </div>
+    `;
+
+    for (const result of results) {
+
+        html += `
+
+            <div class="correlation-row">
+
+                <div>
+                    ${escapeHtml(result.a)}
+                    ↔
+                    ${escapeHtml(result.b)}
+                </div>
+
+                <div class="correlation-value">
+                    ${result.correlation.toFixed(6)}
+                </div>
+
+            </div>
+        `;
+    }
+
+    html += "</div>";
+
+    output.innerHTML = html;
+}
+
+
+function sortCorrelations(direction) {
+
+    if (!state.correlationResults.length) {
+
+        alert(
+            "Calculate correlations first."
+        );
+
+        return;
+    }
+
+    state.correlationResults.sort(
+        (a, b) => {
+
+            if (direction === "strong") {
+
+                return (
+                    b.absolute -
+                    a.absolute
+                );
+            }
+
+            return (
+                a.absolute -
+                b.absolute
+            );
+        }
+    );
+
+    renderCorrelations();
+}
+
+
+document
+.getElementById(
+    "sortWeakStrong"
+)
+.addEventListener(
+    "click",
+    () => sortCorrelations("weak")
+);
+
+
+document
+.getElementById(
+    "sortStrongWeak"
+)
+.addEventListener(
+    "click",
+    () => sortCorrelations("strong")
+);
+
+
+function loadGrouping() {
+
+    const table = activeTable();
+
+    const controls =
+        document.getElementById(
+            "groupingControls"
+        );
+
+    if (!table) {
+
+        controls.innerHTML =
+            '<div class="message">Select a table first.</div>';
+
+        return;
+    }
+
+    const schema =
+        getSchema(table);
+
+    const groupColumns =
+        schema.map(c => c.name);
+
+    const nums =
+        numericColumns(table);
+
+    controls.innerHTML = `
+
+        <div class="controls">
+
+            <label>Group by:</label>
+
+            <select id="groupColumn">
+
+                ${groupColumns.map(
+                    c =>
+                    `<option value="${escapeHtml(c)}">
+                        ${escapeHtml(c)}
+                    </option>`
+                ).join("")}
+
+            </select>
+
+            <label>Value:</label>
+
+            <select id="groupValueColumn">
+
+                ${nums.map(
+                    c =>
+                    `<option value="${escapeHtml(c)}">
+                        ${escapeHtml(c)}
+                    </option>`
+                ).join("")}
+
+            </select>
+
+            <select id="groupFunction">
+
+                <option value="count">Count</option>
+                <option value="avg">Average</option>
+                <option value="sum">Sum</option>
+                <option value="min">Min</option>
+                <option value="max">Max</option>
+
+            </select>
+
+            <button
+                class="primary"
+                id="runGrouping">
+
+                Run Grouping
+
+            </button>
+
+        </div>
+    `;
+
+    document
+    .getElementById("runGrouping")
+    .addEventListener(
+        "click",
+        runGrouping
+    );
+}
+
+
+function runGrouping() {
+
+    const table = activeTable();
+
+    if (!table) return;
+
+    const groupCol =
+        document.getElementById(
+            "groupColumn"
+        ).value;
+
+    const valueCol =
+        document.getElementById(
+            "groupValueColumn"
+        ).value;
+
+    const func =
+        document.getElementById(
+            "groupFunction"
+        ).value;
+
+    const groups = new Map();
+
+    for (const row of table.data) {
+
+        let key = row[groupCol];
+
+        if (isNull(key)) {
+            key = "(NULL / Blank)";
+        }
+
+        if (!groups.has(key)) {
+            groups.set(key, []);
+        }
+
+        groups
+            .get(key)
+            .push(
+                isNumericValue(row[valueCol])
+                    ? numericValue(row[valueCol])
+                    : null
+            );
+    }
+
+    const output = [];
+
+    for (const [key, values] of groups) {
+
+        const valid =
+            values.filter(
+                v => v !== null
+            );
+
+        let result;
+
+        if (func === "count") {
+
+            result = values.length;
+
+        } else if (func === "avg") {
+
+            result =
+                valid.length
+                    ? valid.reduce(
+                        (a, b) => a + b,
+                        0
+                    ) / valid.length
+                    : null;
+
+        } else if (func === "sum") {
+
+            result =
+                valid.reduce(
+                    (a, b) => a + b,
+                    0
+                );
+
+        } else if (func === "min") {
+
+            result =
+                valid.length
+                    ? Math.min(...valid)
+                    : null;
+
+        } else if (func === "max") {
+
+            result =
+                valid.length
+                    ? Math.max(...valid)
+                    : null;
+        }
+
+        output.push({
+            group: key,
+            result
+        });
+    }
+
+    let html = `
+
+        <div class="table-wrapper result-table">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            ${escapeHtml(groupCol)}
+                        </th>
+
+                        <th>
+                            ${escapeHtml(func)}
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+    `;
+
+    for (
+        const row of output.slice(0, 100)
+    ) {
+
+        html += `
+
+            <tr>
+
+                <td>
+                    ${escapeHtml(row.group)}
+                </td>
+
+                <td>
+                    ${
+                        row.result === null
+                            ? ""
+                            : formatNumber(row.result)
+                    }
+                </td>
+
+            </tr>
+        `;
+    }
+
+    html += `
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
+
+    if (output.length > 100) {
+
+        html += `
+
+            <div class="small">
+
+                Showing first 100 of
+                ${output.length.toLocaleString()}
+                groups.
+
+            </div>
+        `;
+    }
+
+    document.getElementById(
+        "groupingResult"
+    ).innerHTML = html;
+}
+
+
+function loadCalculations() {
+
+    const table = activeTable();
+
+    const controls =
+        document.getElementById(
+            "calculationControls"
+        );
+
+    if (!table) {
+
+        controls.innerHTML =
+            '<div class="message">Select a table first.</div>';
+
+        return;
+    }
+
+    const nums =
+        numericColumns(table);
+
+    controls.innerHTML = `
+
+        <div class="controls">
+
+            <select id="calculationColumn">
+
+                ${nums.map(
+                    c =>
+                    `<option value="${escapeHtml(c)}">
+                        ${escapeHtml(c)}
+                    </option>`
+                ).join("")}
+
+            </select>
+
+            <select id="calculationFunction">
+
+                <option value="count">Count</option>
+                <option value="sum">Sum</option>
+                <option value="avg">Average</option>
+                <option value="median">Median</option>
+                <option value="min">Min</option>
+                <option value="max">Max</option>
+                <option value="std">Std Dev</option>
+
+            </select>
+
+            <button
+                class="primary"
+                id="runCalculation">
+
+                Calculate
+
+            </button>
+
+        </div>
+    `;
+
+    document
+    .getElementById("runCalculation")
+    .addEventListener(
+        "click",
+        runCalculation
+    );
+}
+
+
+function runCalculation() {
+
+    const table = activeTable();
+
+    if (!table) return;
+
+    const column =
+        document.getElementById(
+            "calculationColumn"
+        ).value;
+
+    const func =
+        document.getElementById(
+            "calculationFunction"
+        ).value;
+
+    const stats =
+        calculateNumericStats(
+            table.data.map(
+                row => row[column]
+            )
+        );
+
+    if (!stats) {
+
+        document.getElementById(
+            "calculationResult"
+        ).innerHTML =
+            '<div class="message">No numeric data.</div>';
+
+        return;
+    }
+
+    let value;
+
+    if (func === "count")
+        value = stats.count;
+
+    if (func === "sum")
+        value = stats.sum;
+
+    if (func === "avg")
+        value = stats.mean;
+
+    if (func === "median")
+        value = stats.median;
+
+    if (func === "min")
+        value = stats.min;
+
+    if (func === "max")
+        value = stats.max;
+
+    if (func === "std")
+        value = stats.std;
+
+    document.getElementById(
+        "calculationResult"
+    ).innerHTML = `
+
+        <div class="stat-card">
+
+            <strong>
+                ${escapeHtml(func)}
+            </strong>
+
+            ${formatNumber(value)}
+
+        </div>
+    `;
+}
+
+
+/* =========================================================
+   CHARTS
+========================================================= */
+
+function loadCharts() {
+
+    const table = activeTable();
+
+    const controls =
+        document.getElementById(
+            "chartControls"
+        );
+
+    if (!table) {
+
+        controls.innerHTML =
+            '<div class="message">Select a table first.</div>';
+
+        return;
+    }
+
+    const columns =
+        Object.keys(
+            table.data[0] || {}
+        );
+
+    const nums =
+        numericColumns(table);
+
+    controls.innerHTML = `
+
+        <div class="controls">
+
+            <label>
+                Type:
+            </label>
+
+            <select id="chartType">
+
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+                <option value="pie">Pie</option>
+                <option value="scatter">Scatter</option>
+
+            </select>
+
+            <label>
+                X:
+            </label>
+
+            <select id="chartX">
+
+                ${columns.map(
+                    c =>
+                    `<option value="${escapeHtml(c)}">
+                        ${escapeHtml(c)}
+                    </option>`
+                ).join("")}
+
+            </select>
+
+        </div>
+
+        <div>
+
+            <label>
+                Values:
+            </label>
+
+            <div
+                class="chart-values"
+                id="chartValueSelectors">
+
+                ${[1,2,3].map(
+                    () => `
+
+                    <select class="chart-value-select chart-value">
+
+                        <option value="">
+                            None
+                        </option>
+
+                        ${nums.map(
+                            c =>
+                            `<option value="${escapeHtml(c)}">
+                                ${escapeHtml(c)}
+                            </option>`
+                        ).join("")}
+
+                    </select>
+
+                    `
+                ).join("")}
+
+            </div>
+
+        </div>
+
+        <div class="controls">
+
+            <button
+                class="primary"
+                id="createChart">
+
+                Create / Update Chart
+
+            </button>
+
+            <button
+                id="downloadChartPDF">
+
+                Download Graph as PDF
+
+            </button>
+
+        </div>
+    `;
+
+    document
+    .getElementById("createChart")
+    .addEventListener(
+        "click",
+        createChart
+    );
+
+    document
+    .getElementById("downloadChartPDF")
+    .addEventListener(
+        "click",
+        downloadChartPDF
+    );
+}
+
+
+function ensureChartJs() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            if (window.Chart) {
+
+                resolve();
+                return;
+            }
+
+            const script =
+                document.createElement(
+                    "script"
+                );
+
+            script.src =
+                "https://cdn.jsdelivr.net/npm/chart.js";
+
+            script.onload = resolve;
+            script.onerror = reject;
+
+            document.head.appendChild(
+                script
+            );
+        }
+    );
+}
+
+
+async function createChart() {
+
+    const table = activeTable();
+
+    if (!table) return;
+
+    const type =
+        document.getElementById(
+            "chartType"
+        ).value;
+
+    const xColumn =
+        document.getElementById(
+            "chartX"
+        ).value;
+
+    const valueColumns =
+        [...document.querySelectorAll(
+            ".chart-value"
+        )]
+        .map(
+            select => select.value
+        )
+        .filter(Boolean);
+
+    if (!valueColumns.length) {
+
+        alert(
+            "Select at least one value."
+        );
+
+        return;
+    }
+
+    const uniqueValues =
+        [...new Set(valueColumns)]
+        .slice(0, 3);
+
+    await ensureChartJs();
+
+    const area =
+        document.getElementById(
+            "chartArea"
+        );
+
+    area.innerHTML = `
+
+        <div class="chart-container">
+
+            <canvas id="chartCanvas"></canvas>
+
+        </div>
+    `;
+
+    if (state.chart) {
+
+        state.chart.destroy();
+
+        state.chart = null;
+    }
+
+    const limited =
+        table.data.slice(0, 2000);
+
+    const labels =
+        limited.map(
+            row => row[xColumn]
+        );
+
+    const vibrantColors = [
+        "#ff1744",
+        "#2979ff",
+        "#00e676",
+        "#ffea00",
+        "#d500f9",
+        "#00e5ff",
+        "#ff6d00",
+        "#651fff",
+        "#76ff03",
+        "#f50057",
+        "#00b8d4",
+        "#c6ff00"
+    ];
+
+    let datasets = [];
+
+    if (type === "scatter") {
+
+        datasets =
+            uniqueValues.map(
+                (valueColumn, index) => ({
+
+                    label:
+                        valueColumn,
+
+                    data:
+                        limited
+                        .filter(
+                            row =>
+                                isNumericValue(
+                                    row[xColumn]
+                                ) &&
+                                isNumericValue(
+                                    row[valueColumn]
+                                )
+                        )
+                        .map(
+                            row => ({
+
+                                x:
+                                    numericValue(
+                                        row[xColumn]
+                                    ),
+
+                                y:
+                                    numericValue(
+                                        row[valueColumn]
+                                    )
+
+                            })
+                        ),
+
+                    backgroundColor:
+                        vibrantColors[
+                            index %
+                            vibrantColors.length
+                        ],
+
+                    borderColor:
+                        vibrantColors[
+                            index %
+                            vibrantColors.length
+                        ]
+
+                })
+            );
+
+    } else if (type === "pie") {
+
+        datasets = [{
+
+            label:
+                uniqueValues[0],
+
+            data:
+                limited.map(
+                    row =>
+                        isNumericValue(
+                            row[uniqueValues[0]]
+                        )
+                            ? numericValue(
+                                row[uniqueValues[0]]
+                            )
+                            : null
+                ),
+
+            backgroundColor:
+                limited.map(
+                    (_, index) =>
+                        vibrantColors[
+                            index %
+                            vibrantColors.length
+                        ]
+                ),
+
+            borderColor:
+                "#ffffff",
+
+            borderWidth:
+                1
+
+        }];
+
+    } else {
+
+        datasets =
+            uniqueValues.map(
+                (valueColumn, index) => ({
+
+                    label:
+                        valueColumn,
+
+                    data:
+                        limited.map(
+                            row =>
+                                isNumericValue(
+                                    row[valueColumn]
+                                )
+                                    ? numericValue(
+                                        row[valueColumn]
+                                    )
+                                    : null
+                        ),
+
+                    backgroundColor:
+                        vibrantColors[
+                            index %
+                            vibrantColors.length
+                        ],
+
+                    borderColor:
+                        vibrantColors[
+                            index %
+                            vibrantColors.length
+                        ],
+
+                    borderWidth:
+                        2
+
+                })
+            );
+    }
+
+    const ctx =
+        document.getElementById(
+            "chartCanvas"
+        );
+
+    state.chart =
+        new Chart(
+            ctx,
+            {
+
+                type,
+
+                data: {
+
+                    labels:
+                        type === "scatter"
+                            ? undefined
+                            : labels,
+
+                    datasets
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: {
+
+                        mode: "index",
+
+                        intersect: false
+
+                    },
+
+                    plugins: {
+
+                        legend: {
+
+                            display: true
+
+                        }
+
+                    },
+
+                    scales:
+                        type === "pie"
+                            ? {}
+                            : {
+
+                                x: {
+
+                                    title: {
+
+                                        display: true,
+
+                                        text:
+                                            xColumn
+
+                                    }
+
+                                },
+
+                                y: {
+
+                                    title: {
+
+                                        display: true,
+
+                                        text:
+                                            "Value"
+
+                                    }
+
+                                }
+
+                            }
+                }
+            }
+        );
+}
+
+
+/* =========================================================
+   PDF DOWNLOAD
+========================================================= */
+
+async function downloadChartPDF() {
+
+    if (!state.chart) {
+
+        alert(
+            "Create a graph first."
+        );
+
+        return;
+    }
+
+    try {
+
+        if (!window.jspdf) {
+
+            await new Promise(
+                (resolve, reject) => {
+
+                    const script =
+                        document.createElement(
+                            "script"
+                        );
+
+                    script.src =
+                        "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+
+                    script.onload =
+                        resolve;
+
+                    script.onerror =
+                        reject;
+
+                    document.head.appendChild(
+                        script
+                    );
+                }
+            );
+        }
+
+        const canvas =
+            document.getElementById(
+                "chartCanvas"
+            );
+
+        if (!canvas) {
+
+            alert(
+                "Chart canvas not found."
+            );
+
+            return;
+        }
+
+        const image =
+            canvas.toDataURL(
+                "image/png",
+                1
+            );
+
+        const {
+            jsPDF
+        } = window.jspdf;
+
+        const pdf =
+            new jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: "a4"
+            });
+
+        const pageWidth =
+            pdf.internal.pageSize.getWidth();
+
+        const pageHeight =
+            pdf.internal.pageSize.getHeight();
+
+        const margin = 10;
+
+        const ratio =
+            Math.min(
+                (pageWidth - margin * 2) /
+                    canvas.width,
+
+                (pageHeight - margin * 2) /
+                    canvas.height
+            );
+
+        const width =
+            canvas.width * ratio;
+
+        const height =
+            canvas.height * ratio;
+
+        const x =
+            (pageWidth - width) / 2;
+
+        const y =
+            (pageHeight - height) / 2;
+
+        pdf.addImage(
+            image,
+            "PNG",
+            x,
+            y,
+            width,
+            height
+        );
+
+        pdf.save(
+            "DPT-Graph.pdf"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "PDF generation failed:",
+            error
+        );
+
+        alert(
+            "Could not create the PDF."
+        );
+    }
+}
+
+
+/* =========================================================
+   CURRENT DATA
+========================================================= */
+
+function renderCurrentData() {
+
+    const output =
+        document.getElementById(
+            "currentData"
+        );
+
+    const table = activeTable();
+
+    if (!table) {
+
+        output.innerHTML =
+            '<div class="message">Select a table first.</div>';
+
+        return;
+    }
+
+    const pageSize =
+        state.currentDataPageSize;
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                table.data.length /
+                pageSize
+            )
+        );
+
+    if (
+        state.currentDataPage >=
+        totalPages
+    ) {
+
+        state.currentDataPage =
+            totalPages - 1;
+    }
+
+    const start =
+        state.currentDataPage *
+        pageSize;
+
+    const end =
+        Math.min(
+            start + pageSize,
+            table.data.length
+        );
+
+    const rows =
+        table.data.slice(
+            start,
+            end
+        );
+
+    const columns =
+        Object.keys(
+            table.data[0] || {}
+        );
+
+    if (!columns.length) {
+
+        output.innerHTML =
+            '<div class="message">This table is empty.</div>';
+
+        return;
+    }
+
+    let html = `
+
+        <div class="small">
+
+            Showing rows
+            ${start + 1}
+            –
+            ${end}
+            of
+            ${table.data.length.toLocaleString()}
+
+        </div>
+
+        <div class="table-wrapper result-table">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+    `;
+
+    for (const col of columns) {
+
+        html += `
+            <th>
+                ${escapeHtml(col)}
+            </th>
+        `;
+    }
+
+    html += `
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+    `;
+
+    for (const row of rows) {
+
+        html += "<tr>";
+
+        for (const col of columns) {
+
+            html += `
+                <td>
+                    ${escapeHtml(row[col])}
+                </td>
+            `;
+        }
+
+        html += "</tr>";
+    }
+
+    html += `
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="pagination">
+
+            <button
+                id="previousPage"
+                ${
+                    state.currentDataPage === 0
+                        ? "disabled"
+                        : ""
+                }>
+
+                Previous
+
+            </button>
+
+            <span>
+
+                Page
+                ${state.currentDataPage + 1}
+                of
+                ${totalPages}
+
+            </span>
+
+            <button
+                id="nextPage"
+                ${
+                    state.currentDataPage >=
+                    totalPages - 1
+                        ? "disabled"
+                        : ""
+                }>
+
+                Next
+
+            </button>
+
+        </div>
+    `;
+
+    output.innerHTML = html;
+
+    document
+    .getElementById("previousPage")
+    .addEventListener(
+        "click",
+        () => {
+
+            if (
+                state.currentDataPage > 0
+            ) {
+
+                state.currentDataPage--;
+
+                renderCurrentData();
+            }
+        }
+    );
+
+    document
+    .getElementById("nextPage")
+    .addEventListener(
+        "click",
+        () => {
+
+            if (
+                state.currentDataPage <
+                totalPages - 1
+            ) {
+
+                state.currentDataPage++;
+
+                renderCurrentData();
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   FILE IMPORT
+========================================================= */
+
+document
+.getElementById("fileInput")
+.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files[0];
+
+        if (!file) return;
+
+        const reader =
+            new FileReader();
+
+        reader.onload =
+            function(e) {
+
+                const workbook =
+                    XLSX.read(
+                        e.target.result,
+                        {
+                            type: "array"
+                        }
+                    );
+
+                const sheet =
+                    workbook.Sheets[
+                        workbook.SheetNames[0]
+                    ];
+
+                const data =
+                    XLSX.utils.sheet_to_json(
+                        sheet,
+                        {
+                            defval: null
+                        }
+                    );
+
+                createTable(
+                    file.name.replace(
+                        /\.[^/.]+$/,
+                        ""
+                    ),
+                    data,
+                    true
+                );
+
+                event.target.value = "";
+            };
+
+        reader.readAsArrayBuffer(file);
+    }
+);
+
+
+/* =========================================================
+   EXPORT CSV
+========================================================= */
+
+document
+.getElementById("exportTable")
+.addEventListener(
+    "click",
+    () => {
+
+        const table = activeTable();
+
+        if (!table) {
+
+            alert(
+                "Select a table first."
+            );
+
+            return;
+        }
+
+        const worksheet =
+            XLSX.utils.json_to_sheet(
+                table.data
+            );
+
+        const workbook =
+            XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "Data"
+        );
+
+        XLSX.writeFile(
+            workbook,
+            `${table.name}.csv`,
+            {
+                bookType: "csv"
+            }
+        );
+    }
+);
+
+
+/* =========================================================
+   NO INITIAL TABLE
+========================================================= */
+
+refreshTableSelector();
+
+updateOverview();
+
+updateNumericStats();
+
+updateCategoricalSelector();
+
+</script>
+
+</body>
+</html>
